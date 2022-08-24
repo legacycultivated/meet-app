@@ -1,3 +1,4 @@
+import "./nprogress.css";
 import React, { Component } from "react";
 import "./App.css";
 import CitySearch from "./CitySearch";
