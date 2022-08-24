@@ -10,6 +10,7 @@ class NumberOfEvents extends Component {
     return (
       <div className="numberOfEvents">
         <div className="numberOfEvents">
+          <h3>Number Of Events:</h3>
           <input
             className="number-input"
             value={this.state.numOfEvents}
