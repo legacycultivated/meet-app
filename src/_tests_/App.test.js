@@ -75,4 +75,15 @@ describe("<App /> integration", () => {
     expect(AppWrapper.state("events")).toEqual(allEvents);
     AppWrapper.unmount();
   });
+
+  test("render number change of events in input field by changing state", () => {
+    const AppWrapper = mount(<App />);
+    AppWrapper.setState({
+      numberOfEvents: 32,
+    });
+    const NumberOfEventsWrapper = AppWrapper.find(NumberOfEvents);
+    const eventObject = { target: { value: 12 } };
+    NumberOfEventsWrapper.find(".number-input").simulate("change", eventObject);
+    expect(AppWrapper.state("numberOfEvents")).toBe(12);
+  });
 });
