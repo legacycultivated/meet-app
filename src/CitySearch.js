@@ -56,6 +56,9 @@ class CitySearch extends Component {
             this.setState({ showSuggestions: true });
           }}
         />
+        <div className="infoAlert">
+          <InfoAlert text={this.state.infoText} />
+        </div>
         <ul
           className="suggestions"
           style={this.state.showSuggestions ? {} : { display: "none" }}
