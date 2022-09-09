@@ -49,6 +49,16 @@ input[type="number"] {
   position: relative;
 }
 
+.Alert {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.infoAlert {
+  height: 2vh;
+}
+
 .suggestions {
   width: 250px;
   position: absolute;
