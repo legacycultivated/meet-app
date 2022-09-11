@@ -9,13 +9,17 @@ class Alert extends Component {
   getStyle = () => {
     return {
       color: this.color,
+      fontSize: "18px",
+      display: "inline",
     };
   };
 
   render() {
     return (
-      <div className="Alert">
-        <p style={this.getStyle()}>{this.props.text}</p>
+      <div>
+        <p className="Alert" style={this.getStyle()}>
+          {this.props.text}
+        </p>
       </div>
     );
   }
