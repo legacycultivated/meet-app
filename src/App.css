@@ -47,17 +47,21 @@ input[type="number"] {
   max-width: 300px;
   margin: auto;
   position: relative;
+  top: 40px;
 }
 
 .Alert {
   display: flex;
   flex-direction: column;
   position: relative;
+  bottom: 80px;
 }
 
-.infoAlert {
-  margin-bottom: 39px;
-  height: 1.2vh;
+.errorAlert {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  top: 60px;
 }
 
 .suggestions {
@@ -127,7 +131,7 @@ input[type="number"] {
 
 .numberOfEvents {
   width: 200px;
-  margin: 20px auto;
+  margin: 30px auto;
   text-align: center;
 }
 
@@ -137,11 +141,6 @@ input[type="number"] {
   grid-gap: 20px;
   padding: 20px;
   font-family: sans-serif;
-}
-
-.Alert {
-  position: fixed;
-  top: 20px;
 }
 
 .data-vis-wrapper {
