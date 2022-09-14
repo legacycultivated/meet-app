@@ -1,75 +1,46 @@
 import React, { useEffect, useState } from "react";
-import { PieChart, Pie, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 const EventGenre = ({ events }) => {
   const [data, setData] = useState([]);
 
-  const getData = () => {
-    const genres = ["React", "JavaScript", "Node", "jQuery", "AngularJS"];
-
-    let data = genres.map((genre) => {
-      const value = events.filter((event) =>
-        event.summary.split(" ").includes(genre)
-      ).length;
-      return {
-        name: genre,
-        value: value,
-      };
-    });
-    return data;
-  };
-
   useEffect(() => {
-    setData(() => getData());
+    const getData = () => {
+      const genres = ["React", "JavaScript", "Node", "jQuery", "AngularJS"];
+      const data = genres.map((genre) => {
+        const value = events.filter((event) =>
+          event.summary.split(" ").includes(genre)
+        ).length;
+        return { name: genre, value };
+      });
+      return data;
+    };
+
+    setData(getData());
   }, [events]);
 
-  const RADIAN = Math.PI / 180;
-  const renderCustomizedLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    name,
-    percent,
-  }) => {
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="#2F5373"
-        fontSize="13px"
-        letterSpacing={-0.35}
-        fontWeight="600"
-        textAnchor={x > cx ? "start" : "end"}
-        dominantBaseline="central"
-      >
-        {`${name}  ${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
+  const colors = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#ba00fe"];
 
   return (
-    <ResponsiveContainer className="responsiveContainerPie" height={180}>
-      <PieChart height={180}>
+    <ResponsiveContainer height={400}>
+      <PieChart width={400} height={400}>
+        <Tooltip cursor={{ strokeDasharray: "3 3" }} />
         <Pie
-          className="pie"
-          data={data.filter((data) => data.value >= 1)}
+          data={data}
+          cx="50%"
+          cy="50%"
           labelLine={false}
-          label={renderCustomizedLabel}
-          cx={"50%"}
-          cy={"50%"}
-          innerRadius={15}
-          outerRadius={"65%"}
-          fill="antiquewhite" // "#2F5373"
-          stroke="#9fbdd7"
+          outerRadius={80}
+          fill="#8884d8"
           dataKey="value"
-          isAnimationActive={false}
-        ></Pie>
+          label={({ name, percent }) =>
+            `${name} ${(percent * 100).toFixed(0)}%`
+          }
+        >
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+          ))}
+        </Pie>
       </PieChart>
     </ResponsiveContainer>
   );

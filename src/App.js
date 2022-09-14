@@ -6,7 +6,6 @@ import EventList from "./EventList";
 import NumberOfEvents from "./NumberOfEvents";
 import { WarningAlert } from "./Alert";
 import WelcomeScreen from "./WelcomeScreen";
-import EventGenre from "./EventGenre";
 import { getEvents, extractLocations, checkToken, getAccessToken } from "./api";
 import {
   ScatterChart,
@@ -69,14 +68,22 @@ class App extends Component {
   async componentDidMount() {
     this.mounted = true;
     const accessToken = localStorage.getItem("access_token");
-    const isTokenValid = (await checkToken(accessToken)).error ? false : true;
+    let isTokenValid;
+    if (accessToken && !navigator.onLine) {
+      isTokenValid = true;
+    } else {
+      isTokenValid = (await checkToken(accessToken)).error ? false : true;
+    }
     const searchParams = new URLSearchParams(window.location.search);
     const code = searchParams.get("code");
     this.setState({ showWelcomeScreen: !(code || isTokenValid) });
     if ((code || isTokenValid) && this.mounted) {
       getEvents().then((events) => {
         if (this.mounted) {
-          this.setState({ events, locations: extractLocations(events) });
+          this.setState({
+            events: events.slice(0, this.state.numberOfEvents),
+            locations: extractLocations(events),
+          });
         }
       });
     }
@@ -96,6 +103,22 @@ class App extends Component {
     this.mounted = false;
   }
 
+  updateEvents = (location, eventCount) => {
+    if (!location) location = "all";
+    !eventCount
+      ? (eventCount = this.state.numberOfEvents)
+      : this.setState({ numberOfEvents: eventCount });
+    getEvents().then((events) => {
+      const locationEvents =
+        location === "all"
+          ? events
+          : events.filter((event) => event.location === location);
+      this.setState({
+        events: locationEvents.slice(0, eventCount),
+      });
+    });
+  };
+
   getData = () => {
     const { locations, events } = this.state;
     const data = locations.map((location) => {
@@ -109,12 +132,19 @@ class App extends Component {
   };
 
   render() {
+    const {
+      locations,
+      numberOfEvents,
+      events,
+      offlineText,
+      showWelcomeScreen,
+    } = this.state;
     if (this.state.showWelcomeScreen === undefined)
       return <div className="App" />;
     return (
       <div className="App">
         <h1>Meet App</h1>
-        <WarningAlert text={this.state.warningText} />
+        <WarningAlert text={warningText} />
         <CitySearch
           locations={this.state.locations}
           updateEvents={this.updateEvents}
