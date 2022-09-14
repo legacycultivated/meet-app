@@ -102,7 +102,7 @@ class App extends Component {
   componentWillUnmount() {
     this.mounted = false;
   }
-
+  // eslint-disable-next-line
   updateEvents = (location, eventCount) => {
     if (!location) location = "all";
     !eventCount
@@ -136,24 +136,19 @@ class App extends Component {
       locations,
       numberOfEvents,
       events,
-      offlineText,
+      warningText,
       showWelcomeScreen,
     } = this.state;
-    if (this.state.showWelcomeScreen === undefined)
-      return <div className="App" />;
+    if (!showWelcomeScreen) return <div className="App" />;
     return (
       <div className="App">
         <h1>Meet App</h1>
-        <WarningAlert text={this.state.warningText} />
-        <CitySearch
-          locations={this.state.locations}
-          updateEvents={this.updateEvents}
-        />
-
+        <WarningAlert className="warningAlert" text={warningText} />
+        <CitySearch locations={locations} updateEvents={this.updateEvents} />
         <br />
         <NumberOfEvents
-          numberOfEvents={this.state.numberOfEvents}
-          updateNumberOfEvents={this.updateNumberOfEvents}
+          numberOfEvents={numberOfEvents}
+          updateEvents={this.updateEvents}
         />
 
         <div className="data-vis-wrapper">
