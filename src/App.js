@@ -1,11 +1,12 @@
-import "./nprogress.css";
 import React, { Component } from "react";
+import "./nprogress.css";
 import "./App.css";
 import CitySearch from "./CitySearch";
 import EventList from "./EventList";
 import NumberOfEvents from "./NumberOfEvents";
-import { WarningAlert } from "./Alert";
+import { OfflineAlert } from "./Alert";
 import WelcomeScreen from "./WelcomeScreen";
+import EventGenre from "./EventGenre";
 import { getEvents, extractLocations, checkToken, getAccessToken } from "./api";
 import {
   ScatterChart,
@@ -16,85 +17,32 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import EventGenre from "./EventGenre";
 
 class App extends Component {
   state = {
     events: [],
     locations: [],
     numberOfEvents: 32, // will hold the number of events to show
-    currentLocation: "all", // will hold the selected location
+    locationSelected: "all", // will hold the selected location
     showWelcomeScreen: undefined,
-  };
-  updateEvents = (location, eventCount) => {
-    this.mounted = true;
-
-    getEvents().then((events) => {
-      // if eventCount is set we use that value, if not we use the state value
-      const limit = eventCount ?? this.state.numberOfEvents;
-
-      // if currentLocation is set we use that value, if not we use the state value
-      const currentLocation = location ?? this.state.currentLocation;
-
-      // return all the events or just the filtered slice
-      const locationEvents =
-        // if the current location is set to all
-        currentLocation === "all"
-          ? // then return all events
-            events.slice(0, limit)
-          : // otherwise filter location based on user location and limit set by the user
-            events
-              .filter((event) => event.location === currentLocation)
-              .slice(0, limit);
-
-      if (this.mounted) {
-        // update the state
-        this.setState({
-          events: locationEvents,
-          numberOfEvents: limit,
-          currentLocation: currentLocation,
-        });
-      }
-    });
-  };
-
-  updateNumberOfEvents = (number) => {
-    this.setState({
-      numberOfEvents: number,
-    });
-    this.updateEvents("all", number);
   };
 
   async componentDidMount() {
     this.mounted = true;
     const accessToken = localStorage.getItem("access_token");
-    let isTokenValid;
-    if (accessToken && !navigator.onLine) {
-      isTokenValid = true;
-    } else {
-      isTokenValid = (await checkToken(accessToken)).error ? false : true;
-    }
+    const isTokenValid = (await checkToken(accessToken)).error ? false : true;
     const searchParams = new URLSearchParams(window.location.search);
     const code = searchParams.get("code");
     this.setState({ showWelcomeScreen: !(code || isTokenValid) });
     if ((code || isTokenValid) && this.mounted) {
       getEvents().then((events) => {
         if (this.mounted) {
+          let sliceNumber = this.state.numberOfEvents;
           this.setState({
-            events: events.slice(0, this.state.numberOfEvents),
             locations: extractLocations(events),
+            events: events.slice(0, sliceNumber),
           });
         }
-      });
-    }
-    if (!navigator.onLine) {
-      this.setState({
-        warningText:
-          "It seems that you're not connected to the internet, your data was loaded from the cache.",
-      });
-    } else {
-      this.setState({
-        warningText: "",
       });
     }
   }
@@ -102,21 +50,32 @@ class App extends Component {
   componentWillUnmount() {
     this.mounted = false;
   }
-  // eslint-disable-next-line
-  updateEvents = (location, eventCount) => {
-    if (!location) location = "all";
-    !eventCount
-      ? (eventCount = this.state.numberOfEvents)
-      : this.setState({ numberOfEvents: eventCount });
+
+  updateEvents = (location, maxNumberEvents) => {
+    if (maxNumberEvents === undefined) {
+      maxNumberEvents = this.state.numberOfEvents;
+    } else this.setState({ numberOfEvents: maxNumberEvents });
+    if (location === undefined) {
+      location = this.state.locationSelected;
+    }
     getEvents().then((events) => {
-      const locationEvents =
+      let locationEvents =
         location === "all"
           ? events
           : events.filter((event) => event.location === location);
       this.setState({
-        events: locationEvents.slice(0, eventCount),
+        events: locationEvents.slice(0, maxNumberEvents),
+        numberOfEvents: maxNumberEvents,
+        locationSelected: location,
       });
     });
+  };
+
+  updateNumberEvents = (numberOfEvents) => {
+    this.setState({
+      numberOfEvents,
+    });
+    this.updateEvents(undefined, numberOfEvents);
   };
 
   getData = () => {
@@ -132,51 +91,64 @@ class App extends Component {
   };
 
   render() {
-    const {
-      locations,
-      numberOfEvents,
-      events,
-      warningText,
-      showWelcomeScreen,
-    } = this.state;
-    if (!showWelcomeScreen) return <div className="App" />;
+    if (this.state.showWelcomeScreen === undefined)
+      return <div className="App" />;
     return (
       <div className="App">
-        <h1>Meet App</h1>
-        <WarningAlert text={warningText} />
-        <CitySearch locations={locations} updateEvents={this.updateEvents} />
-        <br />
-        <NumberOfEvents
-          numberOfEvents={numberOfEvents}
-          updateEvents={this.updateEvents}
-        />
-
-        <div className="data-vis-wrapper">
-          <h4>Event genres</h4>
-          <EventGenre events={events} />
-          <h4>Events in each city</h4>
-          <ResponsiveContainer height={400}>
-            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <CartesianGrid />
-              <XAxis type="category" dataKey="city" name="city" />
-              <YAxis
-                allowDecimals={false}
-                type="number"
-                dataKey="number"
-                name="number of events"
-              />
-              <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-              <Scatter data={this.getData()} fill="#8884d8" />
-            </ScatterChart>
-          </ResponsiveContainer>
-        </div>
-        <EventList events={this.state.events} />
         <WelcomeScreen
           showWelcomeScreen={this.state.showWelcomeScreen}
           getAccessToken={() => {
             getAccessToken();
           }}
         />
+        <div className="offlineAlert">
+          {!navigator.onLine && (
+            <OfflineAlert text={"You are currently offline!"} />
+          )}
+        </div>
+
+        <h1>Meet App</h1>
+
+        <CitySearch
+          locations={this.state.locations}
+          updateEvents={this.updateEvents}
+        />
+        <NumberOfEvents
+          updateEvents={this.updateEvents}
+          numberOfEvents={this.state.numberOfEvents}
+        />
+        <div className="data-vis-wrapper">
+          <div className="pie-wrapper">
+            <EventGenre events={this.state.events} />
+          </div>
+          <div className="scatter-wrapper">
+            <ResponsiveContainer>
+              <ScatterChart
+                width={400}
+                height={400}
+                margin={{
+                  top: 20,
+                  right: 20,
+                  bottom: 20,
+                  left: 20,
+                }}
+              >
+                <CartesianGrid />
+                <XAxis type="category" dataKey="city" name="City" />
+                <YAxis
+                  type="number"
+                  dataKey="number"
+                  name="Number of events"
+                  allowDecimals={false}
+                />
+
+                <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+                <Scatter data={this.getData()} fill="#8884d8" />
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <EventList events={this.state.events} />
       </div>
     );
   }
